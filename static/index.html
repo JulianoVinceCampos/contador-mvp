@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consulta CNPJ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f4f6f9; --surface: #fff; --primary: #2563eb; --primary-hover: #1d4ed8;
+      --border: #e2e8f0; --text: #1e293b; --muted: #64748b;
+      --green: #16a34a; --green-bg: #dcfce7;
+      --yellow: #ca8a04; --yellow-bg: #fef9c3;
+      --red: #dc2626; --red-bg: #fee2e2;
+      --blue: #2563eb; --blue-bg: #dbeafe;
+      --radius: 8px;
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    header { background: var(--primary); color: white; padding: 1rem 2rem; display: flex; align-items: center; gap: .75rem; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+    header h1 { font-size: 1.25rem; font-weight: 600; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card h2 { font-size: .9rem; font-weight: 700; margin-bottom: 1rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .row { display: flex; gap: .75rem; flex-wrap: wrap; align-items: flex-end; }
+    .field { display: flex; flex-direction: column; gap: .35rem; }
+    .field label { font-size: .78rem; font-weight: 700; color: var(--muted); }
+    input[type="text"], select {
+      height: 40px; padding: 0 .75rem; border: 1px solid var(--border);
+      border-radius: var(--radius); font-size: .9rem; outline: none; transition: border-color .2s;
+    }
+    input[type="text"]:focus, select:focus { border-color: var(--primary); }
+    #cnpj-input { width: 220px; letter-spacing: .05em; font-family: monospace; }
+    .checkbox-field { display: flex; align-items: center; gap: .4rem; height: 40px; font-size: .9rem; }
+    .checkbox-field input { width: 16px; height: 16px; cursor: pointer; }
+    button { height: 40px; padding: 0 1.25rem; border: none; border-radius: var(--radius); font-size: .9rem; font-weight: 600; cursor: pointer; transition: background .2s; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-sm { height: 30px; padding: 0 .75rem; font-size: .8rem; background: var(--primary); color: white; border-radius: var(--radius); }
+    .btn-sm:hover { background: var(--primary-hover); }
+
+    .alert { border-radius: var(--radius); padding: .75rem 1rem; font-size: .875rem; margin-top: .75rem; display: none; }
+    .alert.show { display: block; }
+    .alert-success { background: var(--green-bg); color: var(--green); border: 1px solid #bbf7d0; }
+    .alert-error   { background: var(--red-bg);   color: var(--red);   border: 1px solid #fecaca; }
+    .alert-warn    { background: var(--yellow-bg); color: var(--yellow); border: 1px solid #fde68a; }
+    .alert-info    { background: var(--blue-bg);   color: var(--blue);  border: 1px solid #bfdbfe; }
+
+    /* Source badge */
+    .source-badge {
+      display: inline-block; font-size: .72rem; font-weight: 700;
+      padding: .15rem .5rem; border-radius: 999px; margin-left: .5rem; vertical-align: middle;
+    }
+    .source-brasilapi    { background: #dbeafe; color: #1d4ed8; }
+    .source-cache_local  { background: #e0e7ff; color: #4338ca; }
+    .source-fallback_local { background: #fef9c3; color: #854d0e; }
+
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    th { background: var(--bg); padding: .6rem .75rem; text-align: left; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); border-bottom: 2px solid var(--border); }
+    td { padding: .65rem .75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:hover td { background: #f8fafc; }
+    .empty-row td { text-align: center; color: var(--muted); padding: 2rem; }
+
+    .semaforo { display: inline-flex; align-items: center; gap: .4rem; padding: .2rem .6rem; border-radius: 999px; font-size: .72rem; font-weight: 700; }
+    .semaforo-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .semaforo.verde   { background: var(--green-bg); color: var(--green); }
+    .semaforo.verde   .semaforo-dot { background: var(--green); }
+    .semaforo.amarelo { background: var(--yellow-bg); color: var(--yellow); }
+    .semaforo.amarelo .semaforo-dot { background: var(--yellow); }
+    .semaforo.vermelho{ background: var(--red-bg); color: var(--red); }
+    .semaforo.vermelho .semaforo-dot { background: var(--red); }
+
+    .pagination { display: flex; align-items: center; gap: .5rem; margin-top: 1rem; font-size: .875rem; color: var(--muted); }
+    .pagination button { height: 30px; padding: 0 .75rem; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: .8rem; font-weight: 500; }
+    .pagination button:hover:not(:disabled) { background: var(--bg); }
+    .pagination button:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* Cooldown bar */
+    #cooldown-bar { display: none; background: var(--yellow-bg); border: 1px solid #fde68a; border-radius: var(--radius); padding: .6rem 1rem; margin-top: .75rem; font-size: .85rem; color: var(--yellow); }
+    #cooldown-bar.show { display: flex; align-items: center; gap: .5rem; }
+    .cd-progress { flex: 1; height: 6px; background: #fde68a; border-radius: 3px; overflow: hidden; }
+    .cd-fill { height: 100%; background: var(--yellow); border-radius: 3px; transition: width .9s linear; }
+
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100; justify-content: center; align-items: center; padding: 1rem; }
+    .modal-backdrop.show { display: flex; }
+    .modal { background: var(--surface); border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+    .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 1rem; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--muted); height: auto; padding: 0; }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 1.5rem; }
+    .detail-row { display: flex; gap: .5rem; margin-bottom: .6rem; font-size: .875rem; }
+    .detail-label { font-weight: 600; min-width: 160px; color: var(--muted); }
+    .semaforo-big { display: flex; align-items: center; gap: .75rem; padding: 1rem; border-radius: var(--radius); margin-bottom: 1.25rem; font-weight: 600; }
+    .semaforo-big .dot-big { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
+    .semaforo-big.verde   { background: var(--green-bg); color: var(--green); }
+    .semaforo-big.verde   .dot-big { background: var(--green); }
+    .semaforo-big.amarelo { background: var(--yellow-bg); color: var(--yellow); }
+    .semaforo-big.amarelo .dot-big { background: var(--yellow); }
+    .semaforo-big.vermelho{ background: var(--red-bg); color: var(--red); }
+    .semaforo-big.vermelho .dot-big { background: var(--red); }
+    .json-block { background: #1e293b; color: #e2e8f0; border-radius: var(--radius); padding: 1rem; font-size: .78rem; font-family: 'Consolas','Fira Code',monospace; overflow-x: auto; white-space: pre; margin-top: 1rem; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: .4rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .cnpj-fmt { font-family: monospace; }
+
+    /* Filters row */
+    #q-input { width: 260px; }
+    #uf-input, #situacao-input { width: 140px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <span>🏢</span>
+  <h1>Consulta CNPJ — MVP</h1>
+</header>
+
+<div class="container">
+
+  <!-- Import card -->
+  <div class="card">
+    <h2>Importar Empresa</h2>
+    <div class="row">
+      <div class="field">
+        <label for="cnpj-input">CNPJ</label>
+        <input type="text" id="cnpj-input" placeholder="00.000.000/0000-00" maxlength="18" />
+      </div>
+      <div class="checkbox-field">
+        <input type="checkbox" id="force-check" />
+        <label for="force-check">Forçar atualização</label>
+      </div>
+      <button class="btn-primary" id="import-btn" onclick="importCNPJ()">Importar</button>
+    </div>
+
+    <!-- Cooldown bar (aparece só em 429) -->
+    <div id="cooldown-bar">
+      <span>⏳ Aguarde <strong id="cd-seconds">60</strong>s antes de tentar novamente</span>
+      <div class="cd-progress"><div class="cd-fill" id="cd-fill" style="width:100%"></div></div>
+    </div>
+
+    <div class="alert alert-success" id="alert-success"></div>
+    <div class="alert alert-warn"    id="alert-warn"></div>
+    <div class="alert alert-error"   id="alert-error"></div>
+    <div class="alert alert-info"    id="alert-info"></div>
+  </div>
+
+  <!-- List card -->
+  <div class="card">
+    <h2>Empresas Cadastradas</h2>
+    <div class="row" style="margin-bottom:1rem;">
+      <div class="field">
+        <label>Buscar</label>
+        <input type="text" id="q-input" placeholder="Razão social ou nome fantasia" oninput="debounceSearch()" />
+      </div>
+      <div class="field">
+        <label>UF</label>
+        <input type="text" id="uf-input" placeholder="ex: SP" maxlength="2" oninput="debounceSearch()" />
+      </div>
+      <div class="field">
+        <label>Situação</label>
+        <select id="situacao-input" onchange="loadCompanies()">
+          <option value="">Todas</option>
+          <option value="ATIVA">ATIVA</option>
+          <option value="INAPTA">INAPTA</option>
+          <option value="SUSPENSA">SUSPENSA</option>
+          <option value="BAIXADA">BAIXADA</option>
+          <option value="NULA">NULA</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>CNPJ</th>
+            <th>Razão Social</th>
+            <th>Nome Fantasia</th>
+            <th>UF</th>
+            <th>Situação</th>
+            <th>Semáforo</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="companies-tbody">
+          <tr class="empty-row"><td colspan="7">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button onclick="prevPage()" id="prev-btn">← Anterior</button>
+      <span id="page-info">—</span>
+      <button onclick="nextPage()" id="next-btn">Próxima →</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Detalhes da Empresa</h3>
+      <button class="modal-close" onclick="closeModalDirect()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+  const API = '/api';
+  let currentPage = 1, totalPages = 1;
+  let searchTimer = null;
+  let importing = false;
+  let cooldownTimer = null;
+  let cooldownTotal = 0;
+  let cooldownRemaining = 0;
+
+  // ─── Formatação de CNPJ ───────────────────────────────────────────────────
+  function formatCNPJ(cnpj) {
+    const d = cnpj.replace(/\D/g, '');
+    if (d.length !== 14) return cnpj;
+    return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12)}`;
+  }
+
+  document.getElementById('cnpj-input').addEventListener('input', function () {
+    let v = this.value.replace(/\D/g, '').slice(0, 14);
+    if (v.length > 12) v = `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8,12)}-${v.slice(12)}`;
+    else if (v.length > 8) v = `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8)}`;
+    else if (v.length > 5) v = `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5)}`;
+    else if (v.length > 2) v = `${v.slice(0,2)}.${v.slice(2)}`;
+    this.value = v;
+  });
+
+  document.getElementById('cnpj-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') importCNPJ();
+  });
+
+  // ─── Semáforo badge ───────────────────────────────────────────────────────
+  function semaforoBadge(s) {
+    return `<span class="semaforo ${s.cor}"><span class="semaforo-dot"></span>${s.cor.toUpperCase()}</span>`;
+  }
+
+  // ─── Source badge ─────────────────────────────────────────────────────────
+  const sourceLabel = { brasilapi: '🌐 BrasilAPI', cache_local: '💾 cache local', fallback_local: '📁 fallback' };
+  function sourceBadge(source) {
+    if (!source) return '';
+    const label = sourceLabel[source] || source;
+    return `<span class="source-badge source-${source}">${label}</span>`;
+  }
+
+  // ─── Alerts ───────────────────────────────────────────────────────────────
+  function showAlert(type, html) {
+    hideAlerts();
+    const el = document.getElementById(`alert-${type}`);
+    el.innerHTML = html;
+    el.classList.add('show');
+  }
+  function hideAlerts() {
+    ['success','warn','error','info'].forEach(t =>
+      document.getElementById(`alert-${t}`).classList.remove('show')
+    );
+  }
+
+  // ─── Cooldown (429) ───────────────────────────────────────────────────────
+  function startCooldown(seconds = 60) {
+    clearInterval(cooldownTimer);
+    cooldownTotal = seconds;
+    cooldownRemaining = seconds;
+    const bar = document.getElementById('cooldown-bar');
+    const fill = document.getElementById('cd-fill');
+    const sec = document.getElementById('cd-seconds');
+    bar.classList.add('show');
+    fill.style.width = '100%';
+    sec.textContent = seconds;
+    setImportButtonState(true);
+
+    cooldownTimer = setInterval(() => {
+      cooldownRemaining--;
+      sec.textContent = cooldownRemaining;
+      fill.style.width = `${(cooldownRemaining / cooldownTotal) * 100}%`;
+      if (cooldownRemaining <= 0) {
+        clearInterval(cooldownTimer);
+        bar.classList.remove('show');
+        setImportButtonState(false);
+      }
+    }, 1000);
+  }
+
+  function setImportButtonState(disabled) {
+    document.getElementById('import-btn').disabled = disabled;
+  }
+
+  function isCooldownActive() {
+    return cooldownRemaining > 0;
+  }
+
+  // ─── Importar ─────────────────────────────────────────────────────────────
+  async function importCNPJ() {
+    if (importing) return;
+    if (isCooldownActive()) {
+      showAlert('warn', `⏳ Aguarde mais ${cooldownRemaining}s antes de tentar novamente.`);
+      return;
+    }
+
+    const cnpj = document.getElementById('cnpj-input').value.trim();
+    const force = document.getElementById('force-check').checked;
+    if (!cnpj) { showAlert('error', 'Informe um CNPJ.'); return; }
+
+    hideAlerts();
+    importing = true;
+    setImportButtonState(true);
+    document.getElementById('import-btn').innerHTML = '<span class="spinner"></span>Importando...';
+
+    try {
+      const res = await fetch(`${API}/companies/import?cnpj=${encodeURIComponent(cnpj)}&force=${force}`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        const name = data.razao_social || formatCNPJ(data.cnpj);
+        let msg = `✅ <strong>${name}</strong> importada — ${data.semaforo.mensagem} ${sourceBadge(data.source)}`;
+        if (data.source === 'cache_local') {
+          msg += `<br><small>📌 Dados do banco local (sem consulta externa).</small>`;
+        }
+        if (data.source === 'fallback_local') {
+          msg += `<br><small>⚠️ Dados podem estar desatualizados (fonte pública indisponível).</small>`;
+        }
+        showAlert('success', msg);
+        document.getElementById('cnpj-input').value = '';
+        document.getElementById('force-check').checked = false;
+        currentPage = 1;
+        loadCompanies();
+
+      } else if (res.status === 429) {
+        startCooldown(90);
+        showAlert('warn', '⚠️ ' + (data.detail || 'Fonte pública limitou requisições.'));
+
+      } else if (res.status === 502) {
+        showAlert('warn', '🔌 Fonte pública indisponível. Tente novamente mais tarde.');
+      } else if (res.status === 504) {
+        showAlert('warn', '⏱️ Timeout ao consultar a fonte pública. Tente novamente.');
+      } else {
+        showAlert('error', data.detail || 'Erro ao importar empresa.');
+      }
+
+    } catch (e) {
+      showAlert('error', 'Erro de conexão com a API.');
+    } finally {
+      importing = false;
+      if (!isCooldownActive()) setImportButtonState(false);
+      document.getElementById('import-btn').innerHTML = 'Importar';
+    }
+  }
+
+  // ─── Listagem ─────────────────────────────────────────────────────────────
+  function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { currentPage = 1; loadCompanies(); }, 400);
+  }
+
+  async function loadCompanies() {
+    const q = document.getElementById('q-input').value.trim();
+    const uf = document.getElementById('uf-input').value.trim();
+    const situacao = document.getElementById('situacao-input').value;
+    const params = new URLSearchParams({ page: currentPage, page_size: 20 });
+    if (q) params.set('q', q);
+    if (uf) params.set('uf', uf);
+    if (situacao) params.set('situacao', situacao);
+
+    const tbody = document.getElementById('companies-tbody');
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Carregando...</td></tr>';
+
+    try {
+      const res = await fetch(`${API}/companies?${params}`);
+      const data = await res.json();
+      totalPages = Math.ceil(data.total / data.page_size) || 1;
+      document.getElementById('page-info').textContent =
+        `Página ${data.page} de ${totalPages} (${data.total} empresa${data.total !== 1 ? 's' : ''})`;
+      document.getElementById('prev-btn').disabled = data.page <= 1;
+      document.getElementById('next-btn').disabled = data.page >= totalPages;
+
+      if (!data.items.length) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Nenhuma empresa encontrada.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.items.map(c => `
+        <tr>
+          <td class="cnpj-fmt">${formatCNPJ(c.cnpj)}</td>
+          <td>${c.razao_social || '—'}</td>
+          <td>${c.nome_fantasia || '—'}</td>
+          <td>${c.uf || '—'}</td>
+          <td>${c.situacao || '—'}</td>
+          <td>${semaforoBadge(c.semaforo)}</td>
+          <td><button class="btn-sm" onclick='showDetails(${JSON.stringify(c)})'>Detalhes</button></td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Erro ao carregar empresas.</td></tr>';
+    }
+  }
+
+  function prevPage() { if (currentPage > 1) { currentPage--; loadCompanies(); } }
+  function nextPage() { if (currentPage < totalPages) { currentPage++; loadCompanies(); } }
+
+  // ─── Modal ────────────────────────────────────────────────────────────────
+  function showDetails(company) {
+    const s = company.semaforo;
+    document.getElementById('modal-title').textContent = company.razao_social || formatCNPJ(company.cnpj);
+    const rows = [
+      ['CNPJ', formatCNPJ(company.cnpj)],
+      ['Razão Social', company.razao_social || '—'],
+      ['Nome Fantasia', company.nome_fantasia || '—'],
+      ['Situação', company.situacao || '—'],
+      ['UF', company.uf || '—'],
+      ['Município', company.municipio || '—'],
+      ['Atividade Principal', company.atividade_principal || '—'],
+      ['Atualizado em', new Date(company.updated_at).toLocaleString('pt-BR')],
+    ];
+    document.getElementById('modal-body').innerHTML = `
+      <div class="semaforo-big ${s.cor}">
+        <div class="dot-big"></div>
+        <div>
+          <div>${s.mensagem}</div>
+          <div style="font-size:.8rem;opacity:.8;margin-top:.2rem">Situação: ${s.situacao}</div>
+        </div>
+      </div>
+      ${rows.map(([l,v]) => `<div class="detail-row"><span class="detail-label">${l}</span><span>${v}</span></div>`).join('')}
+      <div class="json-block">${JSON.stringify(company, null, 2)}</div>
+    `;
+    document.getElementById('modal-backdrop').classList.add('show');
+  }
+
+  function closeModal(e) { if (e.target.id === 'modal-backdrop') closeModalDirect(); }
+  function closeModalDirect() { document.getElementById('modal-backdrop').classList.remove('show'); }
+
+  loadCompanies();
+</script>
+</body>
+</html>

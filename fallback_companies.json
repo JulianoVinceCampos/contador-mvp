@@ -1,0 +1,47 @@
+{
+  "33000167000101": {
+    "cnpj": "33000167000101",
+    "razao_social": "PETROLEO BRASILEIRO S.A. PETROBRAS",
+    "nome_fantasia": "PETROBRAS",
+    "descricao_situacao_cadastral": "ATIVA",
+    "uf": "RJ",
+    "municipio": "RIO DE JANEIRO",
+    "cnae_fiscal_descricao": "Extração de petróleo e gás natural"
+  },
+  "60746948000112": {
+    "cnpj": "60746948000112",
+    "razao_social": "BANCO BRADESCO S.A.",
+    "nome_fantasia": "BRADESCO",
+    "descricao_situacao_cadastral": "ATIVA",
+    "uf": "SP",
+    "municipio": "OSASCO",
+    "cnae_fiscal_descricao": "Banco múltiplo, com carteira comercial"
+  },
+  "00000000000191": {
+    "cnpj": "00000000000191",
+    "razao_social": "BANCO DO BRASIL S.A.",
+    "nome_fantasia": "BANCO DO BRASIL",
+    "descricao_situacao_cadastral": "ATIVA",
+    "uf": "DF",
+    "municipio": "BRASILIA",
+    "cnae_fiscal_descricao": "Banco múltiplo, com carteira comercial"
+  },
+  "47960950000121": {
+    "cnpj": "47960950000121",
+    "razao_social": "MAGAZINE LUIZA S.A.",
+    "nome_fantasia": "MAGALU",
+    "descricao_situacao_cadastral": "ATIVA",
+    "uf": "SP",
+    "municipio": "FRANCA",
+    "cnae_fiscal_descricao": "Comércio varejista especializado de eletrodomésticos e equipamentos de áudio e vídeo"
+  },
+  "07526557000100": {
+    "cnpj": "07526557000100",
+    "razao_social": "CLARO S.A.",
+    "nome_fantasia": "CLARO",
+    "descricao_situacao_cadastral": "ATIVA",
+    "uf": "SP",
+    "municipio": "SAO PAULO",
+    "cnae_fiscal_descricao": "Telecomunicações sem fio"
+  }
+}
