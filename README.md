@@ -1,4 +1,4 @@
-# Contador MVP — Consulta CNPJ
+# Contador MVP: Consulta CNPJ
 
 API + interface web para importar e consultar dados de empresas via CNPJ, com persistência em SQLite e semáforo de situação cadastral.
 
@@ -126,7 +126,7 @@ Configurar variável `DATABASE_URL` para PostgreSQL em produção real.
 
 | CNPJ | Empresa |
 |------|---------|
-| `11.222.333/0001-81` | — (inválido, para testar erro 400) |
+| `11.222.333/0001-81` | - (inválido, para testar erro 400) |
 | `33.000.167/0001-01` | Petrobras |
 | `60.746.948/0001-12` | Bradesco |
-| `00.000.000/0000-00` | — (inválido, todos iguais) |
+| `00.000.000/0000-00` | - (inválido, todos iguais) |
