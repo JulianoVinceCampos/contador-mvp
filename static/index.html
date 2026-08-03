@@ -114,7 +114,7 @@
 
 <header>
   <span>🏢</span>
-  <h1>Consulta CNPJ — MVP</h1>
+  <h1>Consulta CNPJ: MVP</h1>
 </header>
 
 <div class="container">
@@ -192,7 +192,7 @@
 
     <div class="pagination">
       <button onclick="prevPage()" id="prev-btn">← Anterior</button>
-      <span id="page-info">—</span>
+      <span id="page-info">-</span>
       <button onclick="nextPage()" id="next-btn">Próxima →</button>
     </div>
   </div>
@@ -323,7 +323,7 @@
 
       if (res.ok) {
         const name = data.razao_social || formatCNPJ(data.cnpj);
-        let msg = `✅ <strong>${name}</strong> importada — ${data.semaforo.mensagem} ${sourceBadge(data.source)}`;
+        let msg = `✅ <strong>${name}</strong> importada: ${data.semaforo.mensagem} ${sourceBadge(data.source)}`;
         if (data.source === 'cache_local') {
           msg += `<br><small>📌 Dados do banco local (sem consulta externa).</small>`;
         }
@@ -391,10 +391,10 @@
       tbody.innerHTML = data.items.map(c => `
         <tr>
           <td class="cnpj-fmt">${formatCNPJ(c.cnpj)}</td>
-          <td>${c.razao_social || '—'}</td>
-          <td>${c.nome_fantasia || '—'}</td>
-          <td>${c.uf || '—'}</td>
-          <td>${c.situacao || '—'}</td>
+          <td>${c.razao_social || '-'}</td>
+          <td>${c.nome_fantasia || '-'}</td>
+          <td>${c.uf || '-'}</td>
+          <td>${c.situacao || '-'}</td>
           <td>${semaforoBadge(c.semaforo)}</td>
           <td><button class="btn-sm" onclick='showDetails(${JSON.stringify(c)})'>Detalhes</button></td>
         </tr>
@@ -413,12 +413,12 @@
     document.getElementById('modal-title').textContent = company.razao_social || formatCNPJ(company.cnpj);
     const rows = [
       ['CNPJ', formatCNPJ(company.cnpj)],
-      ['Razão Social', company.razao_social || '—'],
-      ['Nome Fantasia', company.nome_fantasia || '—'],
-      ['Situação', company.situacao || '—'],
-      ['UF', company.uf || '—'],
-      ['Município', company.municipio || '—'],
-      ['Atividade Principal', company.atividade_principal || '—'],
+      ['Razão Social', company.razao_social || '-'],
+      ['Nome Fantasia', company.nome_fantasia || '-'],
+      ['Situação', company.situacao || '-'],
+      ['UF', company.uf || '-'],
+      ['Município', company.municipio || '-'],
+      ['Atividade Principal', company.atividade_principal || '-'],
       ['Atualizado em', new Date(company.updated_at).toLocaleString('pt-BR')],
     ];
     document.getElementById('modal-body').innerHTML = `

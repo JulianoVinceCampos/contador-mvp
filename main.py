@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Contador MVP — Consulta CNPJ",
+    title="Contador MVP: Consulta CNPJ",
     description="Importa e persiste dados de empresas via CNPJ (BrasilAPI) com semáforo de situação cadastral.",
     version="1.0.0",
     lifespan=lifespan,
